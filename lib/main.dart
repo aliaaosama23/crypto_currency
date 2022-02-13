@@ -8,9 +8,8 @@ class CurrencyConverter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      routes: {'/': (context) => CurrencyScreen()},
-      //home: CurrencyScreen(),
+    return const MaterialApp(
+      home: CurrencyScreen(),
     );
   }
 }
