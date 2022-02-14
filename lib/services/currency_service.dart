@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:currency_converter/models/currency_rate.dart';
 import 'package:currency_converter/utilites/constants.dart';
 import 'package:intl/intl.dart';
