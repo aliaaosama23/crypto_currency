@@ -1,13 +1,9 @@
 import 'dart:io';
-
-import 'package:currency_converter/models/currency_rate.dart';
 import 'package:currency_converter/services/currency_service.dart';
 import 'package:currency_converter/utilites/constants.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-//https://freecurrencyapi.net/api/v2/latest?apikey=
-// 03b8e120-89b6-11ec-a55c-cb5a74769665
 class CurrencyScreen extends StatefulWidget {
   const CurrencyScreen({Key? key}) : super(key: key);
 
@@ -17,60 +13,36 @@ class CurrencyScreen extends StatefulWidget {
 
 class _CurrencyScreenState extends State<CurrencyScreen> {
   CurrencyService service = CurrencyService();
-  String currencySelected = 'USD';
-  List<String> convertedValues = ['?', '?', '?'];
-  //String cryptoCurrency = 'BTC';
-  List<Widget> allList = [];
+  String currencySelected = currencyList[0];
+  Map<String, String> convertedValues = {};
   @override
   void initState() {
     super.initState();
-    // getCurrencyExchangeRate();
-
-    getCurrencyListExchange();
-    // allList.add(
-    //   Container(
-    //     height: 120,
-    //     //height: MediaQuery.of(context).size.height * 0.15,
-    //     color: Colors.blue,
-    //     alignment: Alignment.center,
-    //     child:
-    //         Platform.isAndroid ? getMaterialDesignList() : getCupertinoDesgin(),
-    //   ),
-    // );
   }
-
-  // getCurrencyExchangeRate() async {
-  //   CurrencyRate rate = await service.fetchCurrencyExchangeRate();
-  //   print(rate.rate);
-  //   setState(() {
-  //     convertedValue = rate.rate.toStringAsFixed(0);
-  //   });
-  // }
 
   getCurrencyExchangeRateOnSelectCurrency(String value) async {
-    for (String cryptoCurrency in cryptoList) {
-      CurrencyRate rate =
-          await service.fetchCurrencyExchangeRateDependOnSelectedCurrency(
-              cryptoCurrency, value);
-      setState(() {
-        convertedValues.add(rate.rate.toStringAsFixed(0));
-        currencySelected = value;
-      });
-      print('all convertedValues is $convertedValues');
-    }
+    Map<String, String> rate =
+        await service.fetchCurrencyExchangeRateDependOnSelectedCurrency(value);
+    setState(() {
+      convertedValues = rate;
+      //convertedValues.add(rate);
+      currencySelected = value;
+    });
+
+    print(' currencySelected  is $currencySelected');
+    print(' convertedValues  is $convertedValues');
   }
 
-  Widget getMaterialDesignList() {
+  Widget getMaterialDesignList(BuildContext context) {
     return DropdownButton<String>(
       dropdownColor: Colors.black.withOpacity(0.6),
       iconEnabledColor: Colors.white,
-      // isExpanded: true,
       value: currencySelected,
       items: currencyList
           .map<DropdownMenuItem<String>>(
             (String value) => DropdownMenuItem<String>(
               child: SizedBox(
-                //width: MediaQuery.of(context).size.width * 0.4,
+                width: MediaQuery.of(context).size.width * 0.4,
                 child: Text(
                   value,
                   style: kDropDownCurrencyStyle,
@@ -81,11 +53,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
           )
           .toList(),
       onChanged: (value) {
-        // print(value);
-        // setState(() {
-        //   currencySelected = value!;
         getCurrencyExchangeRateOnSelectCurrency(value!);
-        // });
       },
     );
   }
@@ -94,18 +62,11 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     return CupertinoPicker(
       itemExtent: 32,
       onSelectedItemChanged: (value) {
-        // print('selected value ${currencyList[value]}');
-        // setState(() {
-        //   currencySelected = currencyList[value];
-        // });
-
-        print('getCupertinoDesgin selected item is $value');
         getCurrencyExchangeRateOnSelectCurrency(currencyList[value]);
       },
       children: currencyList.map(
         (e) {
           return SizedBox(
-            //width: MediaQuery.of(context).size.width * 0.4,
             child: Text(
               e,
               style: kDropDownCurrencyStyle,
@@ -116,31 +77,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     );
   }
 
-  getCurrencyListExchange() {
-    for (var i = 0; i < cryptoList.length; i++) {
-      allList.add(Container(
-        decoration: BoxDecoration(
-          color: Colors.blue,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        padding: const EdgeInsets.all(18.0),
-        margin: const EdgeInsets.all(12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('1 ${cryptoList[i]} = ', style: kCurrencyStyle),
-            Text(convertedValues[i], style: kCurrencyStyle),
-            const SizedBox(
-              width: 4,
-            ),
-            Text(currencySelected, style: kCurrencyStyle),
-          ],
-        ),
-      ));
-    }
-    return allList;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -149,8 +85,9 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
         height: MediaQuery.of(context).size.height * 0.15,
         color: Colors.blue,
         alignment: Alignment.center,
-        child:
-            Platform.isAndroid ? getMaterialDesignList() : getCupertinoDesgin(),
+        child: Platform.isAndroid
+            ? getMaterialDesignList(context)
+            : getCupertinoDesgin(),
       ),
       appBar: AppBar(
         title: Row(
@@ -170,7 +107,29 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisAlignment: MainAxisAlignment.start,
-        children: allList,
+        children: [
+          for (String crypto in cryptoList)
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.all(18.0),
+              margin: const EdgeInsets.all(12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('1 $crypto = ', style: kCurrencyStyle),
+                  Text(convertedValues.isEmpty ? '?' : convertedValues[crypto]!,
+                      style: kCurrencyStyle),
+                  const SizedBox(
+                    width: 4,
+                  ),
+                  Text(currencySelected, style: kCurrencyStyle),
+                ],
+              ),
+            )
+        ],
       ),
     );
   }

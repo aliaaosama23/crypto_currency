@@ -1,31 +1,37 @@
 import 'dart:convert';
+
 import 'package:currency_converter/models/currency_rate.dart';
 import 'package:currency_converter/utilites/constants.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
 class CurrencyService {
+  Map<String, String> cryptoPrices = {};
   static String formattedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-  Future<CurrencyRate> fetchCurrencyExchangeRateDependOnSelectedCurrency(
-      String currencyBase, String currencyQuote) async {
-    final response = await http.get(Uri.parse(
-        'https://rest.coinapi.io/v1/exchangerate/$currencyBase/$currencyQuote?apikey=$kAPIKEY&time=$formattedDate'));
-    print(
-        'all url is : https://rest.coinapi.io/v1/exchangerate/$currencyBase/$currencyQuote?apikey=$kAPIKEY&time=$formattedDate');
-    if (response.statusCode == 200) {
-      print('returned body is ${response.body}');
-      print('decoded json ${jsonDecode(response.body)}');
-      return CurrencyRate.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to load rate data');
+  Future fetchCurrencyExchangeRateDependOnSelectedCurrency(
+      String currencyQuote) async {
+    for (String crypto in cryptoList) {
+      final response = await http.get(Uri.parse(
+          'https://rest.coinapi.io/v1/exchangerate/$crypto/$currencyQuote?apikey=$kAPIKEY&time=$formattedDate'));
+
+      if (response.statusCode == 200) {
+        //print('returned body is ${response.body}'); // data as string
+        print('decoded json ${jsonDecode(response.body)}'); // json
+        cryptoPrices[crypto] = CurrencyRate.fromJson(jsonDecode(response.body))
+            .rate
+            .toStringAsFixed(0);
+      } else {
+        throw Exception('Failed to load rate data');
+      }
+      return cryptoPrices;
     }
   }
 }
 
 const List<String> currencyList = [
   "USD",
-  "JPY",
+  //"JPY",
   "CNY",
   "CHF",
   "CAD",
